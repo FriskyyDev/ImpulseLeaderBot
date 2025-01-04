@@ -37,6 +37,15 @@ function Tanking:Initialize(container)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
         end
+
+        local clearButton = AceGUI:Create("Button")
+        clearButton:SetText("Clear Assignments")
+        clearButton:SetWidth(200)
+        clearButton:SetCallback("OnClick", function()
+            Tanking:ClearTankAssignments(tank)
+        end)
+        checkBoxGroup:AddChild(clearButton)
+
     end
 
     local buttonGroup = AceGUI:Create("SimpleGroup")
@@ -53,10 +62,10 @@ function Tanking:Initialize(container)
     buttonGroup:AddChild(sendButton)
 
     local clearButton = AceGUI:Create("Button")
-    clearButton:SetText("Clear Assignments")
+    clearButton:SetText("Clear All Assignments")
     clearButton:SetWidth(200)
     clearButton:SetCallback("OnClick", function()
-        Tanking:ClearTankAssignments()
+        Tanking:ClearAllTankAssignments()
     end)
     buttonGroup:AddChild(clearButton)
 
@@ -117,7 +126,22 @@ function Tanking:UpdateTankAssignment(tank, icon, value)
     tankAssignments[tank][icon] = value
 end
 
-function Tanking:ClearTankAssignments()
+function Tanking:ClearTankAssignments(tank)
+    for i, assignments in pairs(tankAssignments) do
+        if i == tank then
+            for icon, _ in pairs(assignments) do
+                assignments[icon] = false
+            end
+        end
+    end
+    -- Update the UI to reflect the cleared assignments
+    for _, checkBox in ipairs(checkBoxes) do
+        checkBox:SetValue(false)
+    end
+    Tanking:UpdateButtonStates()
+end
+
+function Tanking:ClearAllTankAssignments()
     for tank, assignments in pairs(tankAssignments) do
         for icon, _ in pairs(assignments) do
             assignments[icon] = false
