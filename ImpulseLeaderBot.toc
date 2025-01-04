@@ -16,6 +16,6 @@ Libs\AceEvent-3.0\AceEvent-3.0.xml
 ImpulseLeaderBot.lua
 Tanking.lua
 Warlock.lua
-Mage.lua
+Crowd.lua
 Healing.lua
 Hunter.lua
