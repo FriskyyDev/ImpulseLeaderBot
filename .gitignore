@@ -1,6 +1,10 @@
+.gitignore
+.vscode/
+Libs/
+
+
 # Compiled Lua sources
 luac.out
-Libs/
 # luarocks build files
 *.src.rock
 *.zip
@@ -39,3 +43,4 @@ Libs/
 *.x86_64
 *.hex
 
+.gitignore
