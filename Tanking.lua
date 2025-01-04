@@ -1,5 +1,8 @@
-_G.Tanking = {}
-local tankAssignments = {}
+local name, ns = ...
+ns.Tanking = {}
+local ImpulseLeaderBot = ns.ImpulseLeaderBot
+local Tanking = ns.Tanking
+local assignmentsTank = {}
 
 function Tanking:Initialize(container)
     local label = AceGUI:Create("Label")
@@ -7,4 +10,4 @@ function Tanking:Initialize(container)
     container:AddChild(label)
 end
 
-ImpulseLeaderBot.TankAssignments = tankAssignments
+ImpulseLeaderBot.assignmentsTanking = assignmentsTanking

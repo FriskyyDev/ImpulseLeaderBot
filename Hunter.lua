@@ -1,5 +1,8 @@
-_G.Hunter = {}
-local hunterAssignments = {}
+local name, ns = ...
+ns.Hunter = {}
+local ImpulseLeaderBot = ns.ImpulseLeaderBot
+local Hunter = ns.Hunter
+local assignmentsHunter = {}
 
 function Hunter:Initialize(container)
     local label = AceGUI:Create("Label")
@@ -7,4 +10,8 @@ function Hunter:Initialize(container)
     container:AddChild(label)
 end
 
-ImpulseLeaderBot.HunterAssignments = hunterAssignments
+function Hunter:ReturnRaiders()
+    return nil
+end
+
+ImpulseLeaderBot.assignmentsHunter = assignmentsHunter

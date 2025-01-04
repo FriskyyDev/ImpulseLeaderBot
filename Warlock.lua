@@ -1,5 +1,8 @@
-_G.Warlock = {}
-local banishAssignments = {}
+local name, ns = ...
+ns.Warlock = {}
+local ImpulseLeaderBot = ns.ImpulseLeaderBot
+local Warlock = ns.Warlock
+local assignmentsWarlock = {}
 
 function Warlock:Initialize(container)
     local label = AceGUI:Create("Label")
@@ -7,4 +10,4 @@ function Warlock:Initialize(container)
     container:AddChild(label)
 end
 
-ImpulseLeaderBot.BanishAssignments = banishAssignments
+ImpulseLeaderBot.assignmentsWarlock = assignmentsWarlock

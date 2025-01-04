@@ -1,8 +1,11 @@
+local name, ns = ...
 local ImpulseLeaderBot = LibStub("AceAddon-3.0"):NewAddon("ImpulseLeaderBot", "AceConsole-3.0", "AceEvent-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
+ns.ImpulseLeaderBot = ImpulseLeaderBot
+_G.ILB = ns -- Give DevTool access to the namespace
 
 -- Global variables
-TargetIcons = {
+ns.TargetIcons = {
     {label = "{Skull}", texture = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:0|t"},
     {label = "{X}", texture = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t"},
     {label = "{Square}", texture = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_6:0|t"},
@@ -38,7 +41,7 @@ function Tanking:Initialize(container)
         checkBoxGroup:SetFullWidth(true)
         tankGroup:AddChild(checkBoxGroup)
         
-        for _, icon in ipairs(TargetIcons) do
+        for _, icon in ipairs(ns.TargetIcons) do
             local checkBox = AceGUI:Create("CheckBox")
             checkBox:SetLabel(icon.texture)
             checkBox:SetWidth(50) -- Set a fixed width for each checkbox
@@ -157,8 +160,8 @@ function Tanking:UpdateButtonStates()
     Tanking.clearButton:SetDisabled(not hasAssignments)
 end
 
-ImpulseLeaderBot.TankAssignments = tankAssignments
-
+ImpulseLeaderBot.assignmentsTanking = tankAssignments
+ns.Tanking = Tanking
 -- Warlock logic
 local Warlock = {}
 local banishAssignments = {}
@@ -167,7 +170,7 @@ function Warlock:Initialize(container)
     label:SetText("Content for Banish tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.BanishAssignments = banishAssignments
+ImpulseLeaderBot.assignmentsBanish = banishAssignments
 
 -- Mage logic
 local Mage = {}
@@ -177,7 +180,7 @@ function Mage:Initialize(container)
     label:SetText("Content for Poly tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.PolyAssignments = polyAssignments
+ImpulseLeaderBot.assignmentsCrowd = polyAssignments
 
 -- Healing logic
 local Healing = {}
@@ -187,7 +190,7 @@ function Healing:Initialize(container)
     label:SetText("Content for Healers tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.HealerAssignments = healerAssignments
+ImpulseLeaderBot.assignmentsHealing = healerAssignments
 
 -- Hunter logic
 local Hunter = {}
@@ -197,7 +200,7 @@ function Hunter:Initialize(container)
     label:SetText("Content for Hunters tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.HunterAssignments = hunterAssignments
+ImpulseLeaderBot.assignmentsHunter = hunterAssignments
 
 function ImpulseLeaderBot:OnInitialize()
     self:Print("ImpulseLeaderBot successfully loaded!")
