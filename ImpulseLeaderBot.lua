@@ -27,15 +27,15 @@ function Warlock:Initialize(container)
 end
 ImpulseLeaderBot.assignmentsBanish = banishAssignments
 
--- Mage logic
-local Mage = {}
-local polyAssignments = {}
-function Mage:Initialize(container)
+-- Crowd Control logic
+local Crowd = {}
+local assignmentsCrowd = {}
+function Crowd:Initialize(container)
     local label = AceGUI:Create("Label")
-    label:SetText("Content for Poly tab")
+    label:SetText("Content for Crowd tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.assignmentsCrowd = polyAssignments
+ImpulseLeaderBot.assignmentsCrowd = assignmentsCrowd
 
 -- Healing logic
 local Healing = {}
@@ -93,7 +93,7 @@ function ImpulseLeaderBot:SelectGroup(container, group)
     elseif group == "tab2" then
         Warlock:Initialize(container)
     elseif group == "tab3" then
-        Mage:Initialize(container)
+        Crowd:Initialize(container)
     elseif group == "tab4" then
         Healing:Initialize(container)
     elseif group == "tab5" then
