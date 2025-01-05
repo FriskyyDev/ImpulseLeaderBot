@@ -3,7 +3,7 @@ ns.Tanking = ns.Tanking or {}
 local AceGUI = ns.AceGUI
 local ImpulseLeaderBot = ns.ImpulseLeaderBot
 local Tanking = ns.Tanking
-local tankAssignments = {}
+local assignmentsTank = {}
 local checkBoxes = {}
 
 function Tanking:Initialize(container)
@@ -94,7 +94,7 @@ end
 function Tanking:SendTankAssignments()
     local channel = Tanking.selectedChannel or "RAID"
     SendChatMessage("------ Tank Assignments -------", channel)
-    for tank, assignments in pairs(tankAssignments) do
+    for tank, assignments in pairs(assignmentsTank) do
         local assignedIcons = {}
         for icon, assigned in pairs(assignments) do
             if assigned then
@@ -120,14 +120,14 @@ function Tanking:GetTanksInRaid()
 end
 
 function Tanking:UpdateTankAssignment(tank, icon, value)
-    if not tankAssignments[tank] then
-        tankAssignments[tank] = {}
+    if not assignmentsTank[tank] then
+        assignmentsTank[tank] = {}
     end
-    tankAssignments[tank][icon] = value
+    assignmentsTank[tank][icon] = value
 end
 
 function Tanking:ClearTankAssignments(tank)
-    for i, assignments in pairs(tankAssignments) do
+    for i, assignments in pairs(assignmentsTank) do
         if i == tank then
             for icon, _ in pairs(assignments) do
                 assignments[icon] = false
@@ -142,7 +142,7 @@ function Tanking:ClearTankAssignments(tank)
 end
 
 function Tanking:ClearAllTankAssignments()
-    for tank, assignments in pairs(tankAssignments) do
+    for tank, assignments in pairs(assignmentsTank) do
         for icon, _ in pairs(assignments) do
             assignments[icon] = false
         end
@@ -156,7 +156,7 @@ end
 
 function Tanking:UpdateButtonStates()
     local hasAssignments = false
-    for _, assignments in pairs(tankAssignments) do
+    for _, assignments in pairs(assignmentsTank) do
         for _, assigned in pairs(assignments) do
             if assigned then
                 hasAssignments = true
@@ -169,5 +169,5 @@ function Tanking:UpdateButtonStates()
     Tanking.clearButton:SetDisabled(not hasAssignments)
 end
 
-ImpulseLeaderBot.assignmentsTanking = tankAssignments
+ImpulseLeaderBot.assignmentsTanking = assignmentsTank
 ns.Tanking = Tanking
