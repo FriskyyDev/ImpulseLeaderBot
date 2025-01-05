@@ -1,8 +1,12 @@
+local name, ns = ...
 local ImpulseLeaderBot = LibStub("AceAddon-3.0"):NewAddon("ImpulseLeaderBot", "AceConsole-3.0", "AceEvent-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
+ns.AceGUI = AceGUI
+ns.ImpulseLeaderBot = ImpulseLeaderBot
+_G.ILB = ns -- Give DevTool access to the namespace
 
 -- Global variables
-TargetIcons = {
+ns.TargetIcons = {
     {label = "{Skull}", texture = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:0|t"},
     {label = "{X}", texture = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t"},
     {label = "{Square}", texture = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_6:0|t"},
@@ -13,151 +17,18 @@ TargetIcons = {
     {label = "{Star}", texture = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_1:0|t"}
 }
 
--- Tanking logic
-local Tanking = {}
-local tankAssignments = {}
-local checkBoxes = {}
-
-function Tanking:Initialize(container)
-    local tanks = Tanking:GetTanksInRaid()
-    
-    local scrollFrame = AceGUI:Create("ScrollFrame")
-    scrollFrame:SetLayout("Flow")
-    scrollFrame:SetFullWidth(true)
-    scrollFrame:SetFullHeight(true)
-    container:AddChild(scrollFrame)
-    
-    for _, tank in ipairs(tanks) do
-        local tankGroup = AceGUI:Create("InlineGroup")
-        tankGroup:SetTitle(tank)
-        tankGroup:SetFullWidth(true)
-        scrollFrame:AddChild(tankGroup)
-        
-        local checkBoxGroup = AceGUI:Create("SimpleGroup")
-        checkBoxGroup:SetLayout("Flow")
-        checkBoxGroup:SetFullWidth(true)
-        tankGroup:AddChild(checkBoxGroup)
-        
-        for _, icon in ipairs(TargetIcons) do
-            local checkBox = AceGUI:Create("CheckBox")
-            checkBox:SetLabel(icon.texture)
-            checkBox:SetWidth(50) -- Set a fixed width for each checkbox
-            checkBox:SetCallback("OnValueChanged", function(widget, event, value)
-                Tanking:UpdateTankAssignment(tank, icon.label, value)
-                Tanking:UpdateButtonStates()
-            end)
-            checkBoxGroup:AddChild(checkBox)
-            table.insert(checkBoxes, checkBox)
-        end
-    end
-
-    local buttonGroup = AceGUI:Create("SimpleGroup")
-    buttonGroup:SetLayout("Flow")
-    buttonGroup:SetFullWidth(true)
-    scrollFrame:AddChild(buttonGroup)
-
-    local sendButton = AceGUI:Create("Button")
-    sendButton:SetText("Send Assignments")
-    sendButton:SetWidth(200)
-    sendButton:SetCallback("OnClick", function()
-        Tanking:SendTankAssignments()
-    end)
-    buttonGroup:AddChild(sendButton)
-
-    local clearButton = AceGUI:Create("Button")
-    clearButton:SetText("Clear Assignments")
-    clearButton:SetWidth(200)
-    clearButton:SetCallback("OnClick", function()
-        Tanking:ClearTankAssignments()
-    end)
-    buttonGroup:AddChild(clearButton)
-
-    local channelDropdown = AceGUI:Create("Dropdown")
-    channelDropdown:SetList(Tanking:GetChatChannels())
-    channelDropdown:SetWidth(200)
-    channelDropdown:SetCallback("OnValueChanged", function(widget, event, value)
-        Tanking.selectedChannel = value
-    end)
-    buttonGroup:AddChild(channelDropdown)
-
-    Tanking.sendButton = sendButton
-    Tanking.clearButton = clearButton
-    Tanking:UpdateButtonStates()
-end
-
-function Tanking:GetChatChannels()
-    local channels = {
-        ["RAID"] = "RAID",
-        ["RAID_WARNING"] = "RAID_WARNING",
-        ["PARTY"] = "PARTY"
-    }
-    return channels
-end
-
-function Tanking:SendTankAssignments()
-    local channel = Tanking.selectedChannel or "RAID"
-    SendChatMessage("------ Tank Assignments -------", channel)
-    for tank, assignments in pairs(tankAssignments) do
-        local assignedIcons = {}
-        for icon, assigned in pairs(assignments) do
-            if assigned then
-                table.insert(assignedIcons, icon)
-            end
-        end
-        if #assignedIcons > 0 then
-            SendChatMessage(tank .. ": " .. table.concat(assignedIcons, ", "), channel)
-        end
-    end
-    SendChatMessage("-------------------------------------", channel)
-end
-
-function Tanking:GetTanksInRaid()
-    local tanks = {}
-    for i = 1, MAX_RAID_MEMBERS do
-        local name, _, _, _, class = GetRaidRosterInfo(i)
-        if class == "Warrior" or class == "Paladin" or class == "Druid" then
-            table.insert(tanks, name)
-        end
-    end
-    return tanks
-end
-
-function Tanking:UpdateTankAssignment(tank, icon, value)
-    if not tankAssignments[tank] then
-        tankAssignments[tank] = {}
-    end
-    tankAssignments[tank][icon] = value
-end
-
-function Tanking:ClearTankAssignments()
-    for tank, assignments in pairs(tankAssignments) do
-        for icon, _ in pairs(assignments) do
-            assignments[icon] = false
-        end
-    end
-    -- Update the UI to reflect the cleared assignments
-    for _, checkBox in ipairs(checkBoxes) do
-        checkBox:SetValue(false)
-    end
-    Tanking:UpdateButtonStates()
-end
-
-function Tanking:UpdateButtonStates()
-    local hasAssignments = false
-    for _, assignments in pairs(tankAssignments) do
-        for _, assigned in pairs(assignments) do
-            if assigned then
-                hasAssignments = true
-                break
-            end
-        end
-        if hasAssignments then break end
-    end
-    Tanking.sendButton:SetDisabled(not hasAssignments)
-    Tanking.clearButton:SetDisabled(not hasAssignments)
-end
-
-ImpulseLeaderBot.TankAssignments = tankAssignments
+--only the last 4 characters are relevant, specifying the top left x,y and the bottom right x,y inside the texture map
+ns.classIcons = {
+    {label = "Warrior", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:0:64|t"},
+    {label = "Mage", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:64:128:0:64|t"},
+    {label = "Rogue", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:128:196:0:64|t"},
+    {label = "Druid", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:196:256:0:64|t"},
+    {label = "Hunter", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:64:128|t"},
+    {label = "Shaman", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:64:128:64:128|t"},
+    {label = "Priest", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:128:196:64:128|t"},
+    {label = "Warlock", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:196:256:64:128|t"},
+    {label = "Paladin", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:128:196|t"},
+}
 
 -- Warlock logic
 local Warlock = {}
@@ -167,17 +38,17 @@ function Warlock:Initialize(container)
     label:SetText("Content for Banish tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.BanishAssignments = banishAssignments
+ImpulseLeaderBot.assignmentsBanish = banishAssignments
 
--- Mage logic
-local Mage = {}
-local polyAssignments = {}
-function Mage:Initialize(container)
+-- Crowd Control logic
+local Crowd = {}
+local assignmentsCrowd = {}
+function Crowd:Initialize(container)
     local label = AceGUI:Create("Label")
-    label:SetText("Content for Poly tab")
+    label:SetText("Content for Crowd tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.PolyAssignments = polyAssignments
+ImpulseLeaderBot.assignmentsCrowd = assignmentsCrowd
 
 -- Healing logic
 local Healing = {}
@@ -187,7 +58,7 @@ function Healing:Initialize(container)
     label:SetText("Content for Healers tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.HealerAssignments = healerAssignments
+ImpulseLeaderBot.assignmentsHealing = healerAssignments
 
 -- Hunter logic
 local Hunter = {}
@@ -197,7 +68,7 @@ function Hunter:Initialize(container)
     label:SetText("Content for Hunters tab")
     container:AddChild(label)
 end
-ImpulseLeaderBot.HunterAssignments = hunterAssignments
+ImpulseLeaderBot.assignmentsHunter = hunterAssignments
 
 function ImpulseLeaderBot:OnInitialize()
     self:Print("ImpulseLeaderBot successfully loaded!")
@@ -231,11 +102,11 @@ end
 
 function ImpulseLeaderBot:SelectGroup(container, group)
     if group == "tab1" then
-        Tanking:Initialize(container)
+        ns.Tanking:Initialize(container)
     elseif group == "tab2" then
         Warlock:Initialize(container)
     elseif group == "tab3" then
-        Mage:Initialize(container)
+        Crowd:Initialize(container)
     elseif group == "tab4" then
         Healing:Initialize(container)
     elseif group == "tab5" then
