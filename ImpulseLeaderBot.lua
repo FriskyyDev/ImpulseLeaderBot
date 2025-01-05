@@ -66,7 +66,7 @@ function ImpulseLeaderBot:SelectGroup(container, group)
     elseif group == "tab2" then
         Warlock:Initialize(container)
     elseif group == "tab3" then
-        Crowd:Initialize(container)
+        ns.Crowd:Initialize(container)
     elseif group == "tab4" then
         Healing:Initialize(container)
     elseif group == "tab5" then
