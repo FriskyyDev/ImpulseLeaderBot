@@ -30,46 +30,6 @@ ns.classIcons = {
     {label = "Paladin", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:128:196|t"},
 }
 
--- Warlock logic
-local Warlock = {}
-local banishAssignments = {}
-function Warlock:Initialize(container)
-    local label = AceGUI:Create("Label")
-    label:SetText("Content for Banish tab")
-    container:AddChild(label)
-end
-ImpulseLeaderBot.assignmentsBanish = banishAssignments
-
--- Crowd Control logic
-local Crowd = {}
-local assignmentsCrowd = {}
-function Crowd:Initialize(container)
-    local label = AceGUI:Create("Label")
-    label:SetText("Content for Crowd tab")
-    container:AddChild(label)
-end
-ImpulseLeaderBot.assignmentsCrowd = assignmentsCrowd
-
--- Healing logic
-local Healing = {}
-local healerAssignments = {}
-function Healing:Initialize(container)
-    local label = AceGUI:Create("Label")
-    label:SetText("Content for Healers tab")
-    container:AddChild(label)
-end
-ImpulseLeaderBot.assignmentsHealing = healerAssignments
-
--- Hunter logic
-local Hunter = {}
-local hunterAssignments = {}
-function Hunter:Initialize(container)
-    local label = AceGUI:Create("Label")
-    label:SetText("Content for Hunters tab")
-    container:AddChild(label)
-end
-ImpulseLeaderBot.assignmentsHunter = hunterAssignments
-
 function ImpulseLeaderBot:OnInitialize()
     self:Print("ImpulseLeaderBot successfully loaded!")
     self:CreateMainFrame()
