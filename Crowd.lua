@@ -169,5 +169,23 @@ function Crowd:UpdateButtonStates()
     Crowd.clearButton:SetDisabled(not hasAssignments)
 end
 
+function Crowd:LoadData(data)
+    for key, value in pairs(data) do
+        assignmentsCrowd[key] = value
+    end
+    for _, checkBox in ipairs(checkBoxes) do
+        local crowd, icon = checkBox:GetUserData("crowd"), checkBox:GetUserData("icon")
+        if assignmentsCrowd[crowd] and assignmentsCrowd[crowd][icon] then
+            checkBox:SetValue(assignmentsCrowd[crowd][icon])
+        else
+            checkBox:SetValue(false)
+        end
+    end
+    Crowd:UpdateButtonStates()
+end
+
+function Crowd:GetData()
+    return assignmentsCrowd
+end
 
 ImpulseLeaderBot.assignmentsCrowd = assignmentsCrowd

@@ -30,9 +30,14 @@ ns.classIcons = {
     {label = "Paladin", texture = "|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:128:196|t"},
 }
 
+-- Local variables
+local selectedTabGroup = "tab1"
+
 function ImpulseLeaderBot:OnInitialize()
     self:Print("ImpulseLeaderBot successfully loaded!")
     self:CreateMainFrame()
+    self:RegisterEvent("GROUP_ROSTER_UPDATE", "OnGroupRosterUpdate")
+    self:RegisterEvent("ROLE_CHANGED_INFORM", "OnGroupRosterUpdate")
 end
 
 function ImpulseLeaderBot:CreateMainFrame()
@@ -53,24 +58,57 @@ function ImpulseLeaderBot:CreateMainFrame()
     })
     tabGroup:SetCallback("OnGroupSelected", function(container, event, group)
         container:ReleaseChildren()
-        self:SelectGroup(container, group)
+        selectedTabGroup = group;
+        self:SelectGroup(container)
     end)
     tabGroup:SelectTab("tab1")
 
     mainFrame:AddChild(tabGroup)
+    self.mainFrame = mainFrame
 end
 
-function ImpulseLeaderBot:SelectGroup(container, group)
-    if group == "tab1" then
+function ImpulseLeaderBot:SelectGroup(container)
+    if selectedTabGroup == "tab1" then
         ns.Tanking:Initialize(container)
-    elseif group == "tab2" then
-        Warlock:Initialize(container)
-    elseif group == "tab3" then
+    elseif selectedTabGroup == "tab2" then
+        ns.Warlock:Initialize(container)
+    elseif selectedTabGroup == "tab3" then
         ns.Crowd:Initialize(container)
-    elseif group == "tab4" then
-        Healing:Initialize(container)
-    elseif group == "tab5" then
-        Hunter:Initialize(container)
+    elseif selectedTabGroup == "tab4" then
+        ns.Healing:Initialize(container)
+    elseif selectedTabGroup == "tab5" then
+        ns.Hunter:Initialize(container)
+    end
+end
+
+function ImpulseLeaderBot:OnGroupRosterUpdate()
+    if self.mainFrame and self.mainFrame:IsShown() then
+        local tabGroup = self.mainFrame.children[1]
+        tabGroup:ReleaseChildren()
+
+        -- Get/Load data is commented out for now due to some bugs
+        -- Intent is to maintain data when a new raider joins the raid or a role changes
+        if selectedTabGroup == "tab1" then
+            ns.Tanking:Initialize(tabGroup)
+            -- local tankData = ns.Tanking:GetData()
+            -- ns.Tanking:LoadData(tankData)
+        elseif selectedTabGroup == "tab2" then
+            ns.Warlock:Initialize(tabGroup)
+            -- local warlockData = ns.Warlock:GetData()
+            -- ns.Warlock:LoadData(warlockData)
+        elseif selectedTabGroup == "tab3" then
+            ns.Crowd:Initialize(tabGroup)
+            -- local crowdData = ns.Crowd:GetData()
+            -- ns.Crowd:LoadData(crowdData)
+        elseif selectedTabGroup == "tab4" then
+            ns.Healing:Initialize(tabGroup)
+            -- local healingData = ns.Healing:GetData()
+            -- ns.Healing:LoadData(healingData)
+        elseif selectedTabGroup == "tab5" then
+            ns.Hunter:Initialize(tabGroup)
+            -- local hunterData = ns.Hunter:GetData()
+            -- ns.Hunter:LoadData(hunterData)
+        end
     end
 end
 
