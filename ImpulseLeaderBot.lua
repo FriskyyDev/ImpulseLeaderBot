@@ -87,7 +87,7 @@ function ImpulseLeaderBot:CreateMainFrame()
     tabGroup:SetTabs({
         {text = "Tanks", value = "tab1"},
         {text = "Banish", value = "tab2"},
-        {text = "Poly", value = "tab3"},
+        {text = "Crowd", value = "tab3"},
         {text = "Healers", value = "tab4"},
         {text = "Hunters", value = "tab5"},
     })
