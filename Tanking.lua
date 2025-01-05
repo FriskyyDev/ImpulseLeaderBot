@@ -134,16 +134,9 @@ function Tanking:UpdateTankAssignment(tank, icon, value)
 end
 
 function Tanking:ClearTankAssignments(tank)
-    for i, assignments in pairs(assignmentsTank) do
-        if i == tank then
-            for icon, _ in pairs(assignments) do
-                assignments[icon] = false
-            end
-        end
-    end
-    -- Update the UI to reflect the cleared assignments
-    for _, checkBox in ipairs(checkBoxes) do
-        checkBox:SetValue(false)
+    local assignments =  assignmentsTank[tank]
+    for icon, _ in pairs(assignments) do
+        assignments[icon] = false
     end
     Tanking:UpdateButtonStates()
 end
