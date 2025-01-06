@@ -108,6 +108,10 @@ function Tanking:SendTankAssignments()
     SendChatMessage("-------------------------------------", channel)
 end
 
+function Tanking:Test()
+    Tanking.TestMode = not Tanking.TestMode
+end
+
 function Tanking:GetTanksInRaid()
     local tanks = {}
     for i = 1, MAX_RAID_MEMBERS do
@@ -115,6 +119,9 @@ function Tanking:GetTanksInRaid()
         if class == "Warrior" or class == "Paladin" or class == "Druid" then
             table.insert(tanks, name)
         end
+    end
+    if Tanking.TestMode == true then
+        tanks = {"Teqno", "Swoleble", "Hourglass", "Mcbear", "Rubenonrye"}
     end
     return tanks
 end
@@ -127,16 +134,9 @@ function Tanking:UpdateTankAssignment(tank, icon, value)
 end
 
 function Tanking:ClearTankAssignments(tank)
-    for i, assignments in pairs(assignmentsTank) do
-        if i == tank then
-            for icon, _ in pairs(assignments) do
-                assignments[icon] = false
-            end
-        end
-    end
-    -- Update the UI to reflect the cleared assignments
-    for _, checkBox in ipairs(checkBoxes) do
-        checkBox:SetValue(false)
+    local assignments =  assignmentsTank[tank]
+    for icon, _ in pairs(assignments) do
+        assignments[icon] = false
     end
     Tanking:UpdateButtonStates()
 end
