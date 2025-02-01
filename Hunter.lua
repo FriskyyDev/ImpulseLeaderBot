@@ -7,8 +7,39 @@ local assignmentsHunter = {}
 local checkBoxes = {}
 
 function Hunter:Initialize(container)
+    local mainGroup = AceGUI:Create("SimpleGroup")
+    mainGroup:SetFullWidth(true)
+    mainGroup:SetFullHeight(true)
+    mainGroup:SetLayout("Flow")
+    container:AddChild(mainGroup)
+
+    local treeGroup = AceGUI:Create("TreeGroup")
+    treeGroup:SetLayout("Flow")
+    treeGroup:SetFullHeight(true)
+    treeGroup:SetFullWidth(true)
+    treeGroup:SetTree({
+        {value = "assignments", text = "Assignments"},
+        -- Add more tree items here if needed
+    })
+    treeGroup:SetCallback("OnGroupSelected", function(widget, event, group)
+        self:SelectTreeItem(widget, group)
+    end)
+    mainGroup:AddChild(treeGroup)
+
+    self.contentGroup = treeGroup
+    treeGroup:SelectByValue("assignments")
+end
+
+function Hunter:SelectTreeItem(widget, group)
+    widget:ReleaseChildren()
+    if group == "assignments" then
+        self:CreateScrollFrame(widget)
+    end
+    -- Add more tree item handling here if needed
+end
+
+function Hunter:CreateScrollFrame(container)
     local hunters = Hunter:GetHuntersInRaid()
-    
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)

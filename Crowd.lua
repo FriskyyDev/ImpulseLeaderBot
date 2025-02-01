@@ -7,18 +7,46 @@ local assignmentsCrowd = {}
 local checkBoxes = {}
 
 function Crowd:Initialize(container)
-    local crowd = Crowd:GetCCInRaid()
-    self:CreateScrollFrame(container, crowd, "crowd")
+    local mainGroup = AceGUI:Create("SimpleGroup")
+    mainGroup:SetFullWidth(true)
+    mainGroup:SetFullHeight(true)
+    mainGroup:SetLayout("Flow")
+    container:AddChild(mainGroup)
+
+    local treeGroup = AceGUI:Create("TreeGroup")
+    treeGroup:SetLayout("Flow")
+    treeGroup:SetFullHeight(true)
+    treeGroup:SetFullWidth(true)
+    treeGroup:SetTree({
+        {value = "assignments", text = "Assignments"},
+        -- Add more tree items here if needed
+    })
+    treeGroup:SetCallback("OnGroupSelected", function(widget, event, group)
+        self:SelectTreeItem(widget, group)
+    end)
+    mainGroup:AddChild(treeGroup)
+
+    self.contentGroup = treeGroup
+    treeGroup:SelectByValue("assignments")
 end
 
-function Crowd:CreateScrollFrame(container, users, userType)
+function Crowd:SelectTreeItem(widget, group)
+    widget:ReleaseChildren()
+    if group == "assignments" then
+        self:CreateScrollFrame(widget)
+    end
+    -- Add more tree item handling here if needed
+end
+
+function Crowd:CreateScrollFrame(container)
+    local crowd = Crowd:GetCCInRaid()
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
     
-    for _, user in ipairs(users) do
+    for _, user in ipairs(crowd) do
         local userGroup = AceGUI:Create("InlineGroup")
         userGroup:SetTitle(user)
         userGroup:SetFullWidth(true)
@@ -37,7 +65,7 @@ function Crowd:CreateScrollFrame(container, users, userType)
                 Crowd:UpdateAssignment(user, icon.label, value)
                 Crowd:UpdateButtonStates()
             end)
-            checkBox:SetUserData(userType, user)
+            checkBox:SetUserData("crowd", user)
             checkBox:SetUserData("icon", icon.label)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
