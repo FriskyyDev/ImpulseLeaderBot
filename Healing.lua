@@ -7,25 +7,26 @@ local assignmentsHealing = {}
 local checkBoxes = {}
 
 function Healing:Initialize(container)
+    local healers = Healing:GetHealersInRaid()
+    local tanks = ns.Tanking:GetTanksInRaid()
+    
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
-
-    local healers = Healing:GetHealersInRaid()
-    local tanks = ns.Tanking:GetTanksInRaid()
+    
     for _, healer in ipairs(healers) do
         local healerGroup = AceGUI:Create("InlineGroup")
         healerGroup:SetTitle(healer)
         healerGroup:SetFullWidth(true)
         scrollFrame:AddChild(healerGroup)
-
+        
         local checkBoxGroup = AceGUI:Create("SimpleGroup")
         checkBoxGroup:SetLayout("Flow")
         checkBoxGroup:SetFullWidth(true)
         healerGroup:AddChild(checkBoxGroup)
-
+        
         for _, tank in ipairs(tanks) do
             local checkBox = AceGUI:Create("CheckBox")
             checkBox:SetLabel(tank)
@@ -34,6 +35,8 @@ function Healing:Initialize(container)
                 Healing:UpdateHealerAssignment(healer, tank, value)
                 Healing:UpdateButtonStates()
             end)
+            checkBox:SetUserData("healer", healer)
+            checkBox:SetUserData("tank", tank)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
         end
@@ -133,8 +136,12 @@ function Healing:ClearHealerAssignments(healer)
             end
         end
     end
+    -- Update the UI to reflect the cleared assignments
     for _, checkBox in ipairs(checkBoxes) do
-        checkBox:SetValue(false)
+        local healer, tank = checkBox:GetUserData("healer"), checkBox:GetUserData("tank")
+        if healer == i then
+            checkBox:SetValue(false)
+        end
     end
     Healing:UpdateButtonStates()
 end
@@ -145,6 +152,7 @@ function Healing:ClearAllHealerAssignments()
             assignments[tank] = false
         end
     end
+    -- Update the UI to reflect the cleared assignments
     for _, checkBox in ipairs(checkBoxes) do
         checkBox:SetValue(false)
     end
@@ -167,8 +175,10 @@ function Healing:UpdateButtonStates()
 end
 
 function Healing:LoadData(data)
-    for key, value in pairs(data) do
-        assignmentsHealing[key] = value
+    if data then
+        for key, value in pairs(data) do
+            assignmentsHealing[key] = value
+        end
     end
     for _, checkBox in ipairs(checkBoxes) do
         local healer, tank = checkBox:GetUserData("healer"), checkBox:GetUserData("tank")

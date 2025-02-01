@@ -31,9 +31,11 @@ function Crowd:Initialize(container)
             checkBox:SetLabel(icon.texture)
             checkBox:SetWidth(50) -- Set a fixed width for each checkbox
             checkBox:SetCallback("OnValueChanged", function(widget, event, value)
-                Crowd:UpdateTankAssignment(crowd, icon.label, value)
+                Crowd:UpdateCrowdAssignment(crowd, icon.label, value)
                 Crowd:UpdateButtonStates()
             end)
+            checkBox:SetUserData("crowd", crowd)
+            checkBox:SetUserData("icon", icon.label)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
         end
@@ -42,10 +44,9 @@ function Crowd:Initialize(container)
         clearButton:SetText("Clear Assignments")
         clearButton:SetWidth(200)
         clearButton:SetCallback("OnClick", function()
-            Crowd:ClearTankAssignments(crowd)
+            Crowd:ClearCrowdAssignments(crowd)
         end)
         checkBoxGroup:AddChild(clearButton)
-
     end
 
     local buttonGroup = AceGUI:Create("SimpleGroup")
@@ -57,7 +58,7 @@ function Crowd:Initialize(container)
     sendButton:SetText("Send Assignments")
     sendButton:SetWidth(200)
     sendButton:SetCallback("OnClick", function()
-        Crowd:SendTankAssignments()
+        Crowd:SendCrowdAssignments()
     end)
     buttonGroup:AddChild(sendButton)
 
@@ -65,7 +66,7 @@ function Crowd:Initialize(container)
     clearButton:SetText("Clear All Assignments")
     clearButton:SetWidth(200)
     clearButton:SetCallback("OnClick", function()
-        Crowd:ClearAllTankAssignments()
+        Crowd:ClearAllCrowdAssignments()
     end)
     buttonGroup:AddChild(clearButton)
 
@@ -91,9 +92,9 @@ function Crowd:GetChatChannels()
     return channels
 end
 
-function Crowd:SendTankAssignments()
+function Crowd:SendCrowdAssignments()
     local channel = Crowd.selectedChannel or "RAID"
-    SendChatMessage("------ Tank Assignments -------", channel)
+    SendChatMessage("------ Crowd Assignments -------", channel)
     for crowd, assignments in pairs(assignmentsCrowd) do
         local assignedIcons = {}
         for icon, assigned in pairs(assignments) do
@@ -119,14 +120,14 @@ function Crowd:GetCCInRaid()
     return crowds
 end
 
-function Crowd:UpdateTankAssignment(crowd, icon, value)
+function Crowd:UpdateCrowdAssignment(crowd, icon, value)
     if not assignmentsCrowd[crowd] then
         assignmentsCrowd[crowd] = {}
     end
     assignmentsCrowd[crowd][icon] = value
 end
 
-function Crowd:ClearTankAssignments(crowd)
+function Crowd:ClearCrowdAssignments(crowd)
     for i, assignments in pairs(assignmentsCrowd) do
         if i == crowd then
             for icon, _ in pairs(assignments) do
@@ -136,12 +137,15 @@ function Crowd:ClearTankAssignments(crowd)
     end
     -- Update the UI to reflect the cleared assignments
     for _, checkBox in ipairs(checkBoxes) do
-        checkBox:SetValue(false)
+        local crowd, icon = checkBox:GetUserData("crowd"), checkBox:GetUserData("icon")
+        if crowd == i then
+            checkBox:SetValue(false)
+        end
     end
     Crowd:UpdateButtonStates()
 end
 
-function Crowd:ClearAllTankAssignments()
+function Crowd:ClearAllCrowdAssignments()
     for crowd, assignments in pairs(assignmentsCrowd) do
         for icon, _ in pairs(assignments) do
             assignments[icon] = false
@@ -170,8 +174,10 @@ function Crowd:UpdateButtonStates()
 end
 
 function Crowd:LoadData(data)
-    for key, value in pairs(data) do
-        assignmentsCrowd[key] = value
+    if data then
+        for key, value in pairs(data) do
+            assignmentsCrowd[key] = value
+        end
     end
     for _, checkBox in ipairs(checkBoxes) do
         local crowd, icon = checkBox:GetUserData("crowd"), checkBox:GetUserData("icon")

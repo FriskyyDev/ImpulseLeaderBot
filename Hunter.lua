@@ -7,32 +7,35 @@ local assignmentsHunter = {}
 local checkBoxes = {}
 
 function Hunter:Initialize(container)
+    local hunters = Hunter:GetHuntersInRaid()
+    
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
-
-    local hunters = Hunter:GetHuntersInRaid()
+    
     for _, hunter in ipairs(hunters) do
         local hunterGroup = AceGUI:Create("InlineGroup")
         hunterGroup:SetTitle(hunter)
         hunterGroup:SetFullWidth(true)
         scrollFrame:AddChild(hunterGroup)
-
+        
         local checkBoxGroup = AceGUI:Create("SimpleGroup")
         checkBoxGroup:SetLayout("Flow")
         checkBoxGroup:SetFullWidth(true)
         hunterGroup:AddChild(checkBoxGroup)
-
+        
         for _, icon in ipairs(ns.TargetIcons) do
             local checkBox = AceGUI:Create("CheckBox")
             checkBox:SetLabel(icon.texture)
-            checkBox:SetWidth(50)
+            checkBox:SetWidth(50) -- Set a fixed width for each checkbox
             checkBox:SetCallback("OnValueChanged", function(widget, event, value)
                 Hunter:UpdateHunterAssignment(hunter, icon.label, value)
                 Hunter:UpdateButtonStates()
             end)
+            checkBox:SetUserData("hunter", hunter)
+            checkBox:SetUserData("icon", icon.label)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
         end
@@ -132,8 +135,12 @@ function Hunter:ClearHunterAssignments(hunter)
             end
         end
     end
+    -- Update the UI to reflect the cleared assignments
     for _, checkBox in ipairs(checkBoxes) do
-        checkBox:SetValue(false)
+        local hunter, icon = checkBox:GetUserData("hunter"), checkBox:GetUserData("icon")
+        if hunter == i then
+            checkBox:SetValue(false)
+        end
     end
     Hunter:UpdateButtonStates()
 end
@@ -144,6 +151,7 @@ function Hunter:ClearAllHunterAssignments()
             assignments[icon] = false
         end
     end
+    -- Update the UI to reflect the cleared assignments
     for _, checkBox in ipairs(checkBoxes) do
         checkBox:SetValue(false)
     end
@@ -166,8 +174,10 @@ function Hunter:UpdateButtonStates()
 end
 
 function Hunter:LoadData(data)
-    for key, value in pairs(data) do
-        assignmentsHunter[key] = value
+    if data then
+        for key, value in pairs(data) do
+            assignmentsHunter[key] = value
+        end
     end
     for _, checkBox in ipairs(checkBoxes) do
         local hunter, icon = checkBox:GetUserData("hunter"), checkBox:GetUserData("icon")

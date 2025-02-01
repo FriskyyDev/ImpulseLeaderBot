@@ -7,32 +7,35 @@ local assignmentsWarlock = {}
 local checkBoxes = {}
 
 function Warlock:Initialize(container)
+    local warlocks = Warlock:GetWarlocksInRaid()
+    
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
-
-    local warlocks = Warlock:GetWarlocksInRaid()
+    
     for _, warlock in ipairs(warlocks) do
         local warlockGroup = AceGUI:Create("InlineGroup")
         warlockGroup:SetTitle(warlock)
         warlockGroup:SetFullWidth(true)
         scrollFrame:AddChild(warlockGroup)
-
+        
         local checkBoxGroup = AceGUI:Create("SimpleGroup")
         checkBoxGroup:SetLayout("Flow")
         checkBoxGroup:SetFullWidth(true)
         warlockGroup:AddChild(checkBoxGroup)
-
+        
         for _, icon in ipairs(ns.TargetIcons) do
             local checkBox = AceGUI:Create("CheckBox")
             checkBox:SetLabel(icon.texture)
-            checkBox:SetWidth(50)
+            checkBox:SetWidth(50) -- Set a fixed width for each checkbox
             checkBox:SetCallback("OnValueChanged", function(widget, event, value)
                 Warlock:UpdateWarlockAssignment(warlock, icon.label, value)
                 Warlock:UpdateButtonStates()
             end)
+            checkBox:SetUserData("warlock", warlock)
+            checkBox:SetUserData("icon", icon.label)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
         end
@@ -132,8 +135,12 @@ function Warlock:ClearWarlockAssignments(warlock)
             end
         end
     end
+    -- Update the UI to reflect the cleared assignments
     for _, checkBox in ipairs(checkBoxes) do
-        checkBox:SetValue(false)
+        local warlock, icon = checkBox:GetUserData("warlock"), checkBox:GetUserData("icon")
+        if warlock == i then
+            checkBox:SetValue(false)
+        end
     end
     Warlock:UpdateButtonStates()
 end
@@ -144,6 +151,7 @@ function Warlock:ClearAllWarlockAssignments()
             assignments[icon] = false
         end
     end
+    -- Update the UI to reflect the cleared assignments
     for _, checkBox in ipairs(checkBoxes) do
         checkBox:SetValue(false)
     end
@@ -166,8 +174,10 @@ function Warlock:UpdateButtonStates()
 end
 
 function Warlock:LoadData(data)
-    for key, value in pairs(data) do
-        assignmentsWarlock[key] = value
+    if data then
+        for key, value in pairs(data) do
+            assignmentsWarlock[key] = value
+        end
     end
     for _, checkBox in ipairs(checkBoxes) do
         local warlock, icon = checkBox:GetUserData("warlock"), checkBox:GetUserData("icon")
