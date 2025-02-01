@@ -34,6 +34,8 @@ function Tanking:Initialize(container)
                 Tanking:UpdateTankAssignment(tank, icon.label, value)
                 Tanking:UpdateButtonStates()
             end)
+            checkBox:SetUserData("tank", tank)
+            checkBox:SetUserData("icon", icon.label)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
         end
@@ -115,8 +117,8 @@ end
 function Tanking:GetTanksInRaid()
     local tanks = {}
     for i = 1, MAX_RAID_MEMBERS do
-        local name, _, _, _, class = GetRaidRosterInfo(i)
-        if class == "Warrior" or class == "Paladin" or class == "Druid" then
+        local name, _, subgroup, _, class, _, _, _, _, role = GetRaidRosterInfo(i)
+        if role == "MAINTANK" and (class == "Warrior" or class == "Paladin" or class == "Druid") then
             table.insert(tanks, name)
         end
     end
@@ -134,9 +136,19 @@ function Tanking:UpdateTankAssignment(tank, icon, value)
 end
 
 function Tanking:ClearTankAssignments(tank)
-    local assignments =  assignmentsTank[tank]
-    for icon, _ in pairs(assignments) do
-        assignments[icon] = false
+    for i, assignments in pairs(assignmentsTank) do
+        if i == tank then
+            for icon, _ in pairs(assignments) do
+                assignments[icon] = false
+            end
+        end
+    end
+    -- Update the UI to reflect the cleared assignments
+    for _, checkBox in ipairs(checkBoxes) do
+        local tank, icon = checkBox:GetUserData("tank"), checkBox:GetUserData("icon")
+        if tank == i then
+            checkBox:SetValue(false)
+        end
     end
     Tanking:UpdateButtonStates()
 end
@@ -167,6 +179,29 @@ function Tanking:UpdateButtonStates()
     end
     Tanking.sendButton:SetDisabled(not hasAssignments)
     Tanking.clearButton:SetDisabled(not hasAssignments)
+end
+
+function Tanking:LoadData(data)
+    -- Process and load the assignment data
+    for key, value in pairs(data) do
+        -- Assume data is a table with key-value pairs representing assignments
+        -- Implement the logic to load the data into the module
+        assignmentsTank[key] = value
+    end
+    -- Update the UI to reflect the loaded data
+    for _, checkBox in ipairs(checkBoxes) do
+        local tank, icon = checkBox:GetUserData("tank"), checkBox:GetUserData("icon")
+        if assignmentsTank[tank] and assignmentsTank[tank][icon] then
+            checkBox:SetValue(assignmentsTank[tank][icon])
+        else
+            checkBox:SetValue(false)
+        end
+    end
+    Tanking:UpdateButtonStates()
+end
+
+function Tanking:GetData()
+    return assignmentsTank
 end
 
 ImpulseLeaderBot.assignmentsTanking = assignmentsTank
