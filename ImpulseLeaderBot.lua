@@ -54,12 +54,13 @@ function ImpulseLeaderBot:CreateMainFrame()
     mainFrame:SetTitle("Impulse Leader Bot")
     mainFrame:SetStatusText("Welcome to Impulse Leader Bot")
     mainFrame:SetLayout("Fill")
+    mainFrame:SetWidth(900)
 
     local tabGroup = AceGUI:Create("TabGroup")
     tabGroup:SetLayout("Flow")
     tabGroup:SetTabs({
         {text = "Tanks", value = "tab1"},
-        {text = "Banish", value = "tab2"},
+        {text = "Warlock", value = "tab2"},
         {text = "Crowd", value = "tab3"},
         {text = "Healers", value = "tab4"},
         {text = "Hunters", value = "tab5"},
@@ -122,7 +123,7 @@ SlashCmdList["ILB"] = function()
             tabGroup:SetLayout("Flow")
             tabGroup:SetTabs({
                 {text = "Tanks", value = "tab1"},
-                {text = "Banish", value = "tab2"},
+                {text = "Warlock", value = "tab2"},
                 {text = "Crowd", value = "tab3"},
                 {text = "Healers", value = "tab4"},
                 {text = "Hunters", value = "tab5"},

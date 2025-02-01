@@ -7,37 +7,65 @@ local assignmentsWarlock = {}
 local checkBoxes = {}
 
 function Warlock:Initialize(container)
-    local warlocks = Warlock:GetWarlocksInRaid()
-    self:CreateScrollFrame(container, warlocks, "warlock")
+    local mainGroup = AceGUI:Create("SimpleGroup")
+    mainGroup:SetFullWidth(true)
+    mainGroup:SetFullHeight(true)
+    mainGroup:SetLayout("Flow")
+    container:AddChild(mainGroup)
+
+    local treeGroup = AceGUI:Create("TreeGroup")
+    treeGroup:SetLayout("Flow")
+    treeGroup:SetFullHeight(true)
+    treeGroup:SetFullWidth(true)
+    treeGroup:SetTree({
+        {value = "banish", text = "Banish"},
+        -- Add more tree items here if needed
+    })
+    treeGroup:SetCallback("OnGroupSelected", function(widget, event, group)
+        self:SelectTreeItem(widget, group)
+    end)
+    mainGroup:AddChild(treeGroup)
+
+    self.contentGroup = treeGroup
+    treeGroup:SelectByValue("banish")
 end
 
-function Warlock:CreateScrollFrame(container, users, userType)
+function Warlock:SelectTreeItem(widget, group)
+    widget:ReleaseChildren()
+    if group == "banish" then
+        self:CreateScrollFrame(widget)
+    end
+    -- Add more tree item handling here if needed
+end
+
+function Warlock:CreateScrollFrame(container)
+    local warlocks = Warlock:GetWarlocksInRaid()
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
     
-    for _, user in ipairs(users) do
-        local userGroup = AceGUI:Create("InlineGroup")
-        userGroup:SetTitle(user)
-        userGroup:SetFullWidth(true)
-        scrollFrame:AddChild(userGroup)
+    for _, warlock in ipairs(warlocks) do
+        local warlockGroup = AceGUI:Create("InlineGroup")
+        warlockGroup:SetTitle(warlock)
+        warlockGroup:SetFullWidth(true)
+        scrollFrame:AddChild(warlockGroup)
         
         local checkBoxGroup = AceGUI:Create("SimpleGroup")
         checkBoxGroup:SetLayout("Flow")
         checkBoxGroup:SetFullWidth(true)
-        userGroup:AddChild(checkBoxGroup)
+        warlockGroup:AddChild(checkBoxGroup)
         
         for _, icon in ipairs(ns.TargetIcons) do
             local checkBox = AceGUI:Create("CheckBox")
             checkBox:SetLabel(icon.texture)
             checkBox:SetWidth(50)
             checkBox:SetCallback("OnValueChanged", function(widget, event, value)
-                Warlock:UpdateAssignment(user, icon.label, value)
+                Warlock:UpdateAssignment(warlock, icon.label, value)
                 Warlock:UpdateButtonStates()
             end)
-            checkBox:SetUserData(userType, user)
+            checkBox:SetUserData("warlock", warlock)
             checkBox:SetUserData("icon", icon.label)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
@@ -47,7 +75,7 @@ function Warlock:CreateScrollFrame(container, users, userType)
         clearButton:SetText("Clear Assignments")
         clearButton:SetWidth(200)
         clearButton:SetCallback("OnClick", function()
-            Warlock:ClearAssignments(user)
+            Warlock:ClearAssignments(warlock)
         end)
         checkBoxGroup:AddChild(clearButton)
     end

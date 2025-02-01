@@ -7,39 +7,67 @@ local assignmentsHealing = {}
 local checkBoxes = {}
 
 function Healing:Initialize(container)
-    local healers = Healing:GetHealersInRaid()
-    local tanks = ns.Tanking:GetTanksInRaid()
-    self:CreateScrollFrame(container, healers, tanks, "healer", "tank")
+    local mainGroup = AceGUI:Create("SimpleGroup")
+    mainGroup:SetFullWidth(true)
+    mainGroup:SetFullHeight(true)
+    mainGroup:SetLayout("Flow")
+    container:AddChild(mainGroup)
+
+    local treeGroup = AceGUI:Create("TreeGroup")
+    treeGroup:SetLayout("Flow")
+    treeGroup:SetFullHeight(true)
+    treeGroup:SetFullWidth(true)
+    treeGroup:SetTree({
+        {value = "assignments", text = "Assignments"},
+        -- Add more tree items here if needed
+    })
+    treeGroup:SetCallback("OnGroupSelected", function(widget, event, group)
+        self:SelectTreeItem(widget, group)
+    end)
+    mainGroup:AddChild(treeGroup)
+
+    self.contentGroup = treeGroup
+    treeGroup:SelectByValue("assignments")
 end
 
-function Healing:CreateScrollFrame(container, users, targets, userType, targetType)
+function Healing:SelectTreeItem(widget, group)
+    widget:ReleaseChildren()
+    if group == "assignments" then
+        self:CreateScrollFrame(widget)
+    end
+    -- Add more tree item handling here if needed
+end
+
+function Healing:CreateScrollFrame(container)
+    local healers = Healing:GetHealersInRaid()
+    local tanks = ns.Tanking:GetTanksInRaid()
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
     
-    for _, user in ipairs(users) do
-        local userGroup = AceGUI:Create("InlineGroup")
-        userGroup:SetTitle(user)
-        userGroup:SetFullWidth(true)
-        scrollFrame:AddChild(userGroup)
+    for _, healer in ipairs(healers) do
+        local healerGroup = AceGUI:Create("InlineGroup")
+        healerGroup:SetTitle(healer)
+        healerGroup:SetFullWidth(true)
+        scrollFrame:AddChild(healerGroup)
         
         local checkBoxGroup = AceGUI:Create("SimpleGroup")
         checkBoxGroup:SetLayout("Flow")
         checkBoxGroup:SetFullWidth(true)
-        userGroup:AddChild(checkBoxGroup)
+        healerGroup:AddChild(checkBoxGroup)
         
-        for _, target in ipairs(targets) do
+        for _, tank in ipairs(tanks) do
             local checkBox = AceGUI:Create("CheckBox")
-            checkBox:SetLabel(target)
+            checkBox:SetLabel(tank)
             checkBox:SetWidth(150)
             checkBox:SetCallback("OnValueChanged", function(widget, event, value)
-                Healing:UpdateAssignment(user, target, value)
+                Healing:UpdateAssignment(healer, tank, value)
                 Healing:UpdateButtonStates()
             end)
-            checkBox:SetUserData(userType, user)
-            checkBox:SetUserData(targetType, target)
+            checkBox:SetUserData("healer", healer)
+            checkBox:SetUserData("tank", tank)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
         end
@@ -48,7 +76,7 @@ function Healing:CreateScrollFrame(container, users, targets, userType, targetTy
         clearButton:SetText("Clear Assignments")
         clearButton:SetWidth(200)
         clearButton:SetCallback("OnClick", function()
-            Healing:ClearAssignments(user)
+            Healing:ClearAssignments(healer)
         end)
         checkBoxGroup:AddChild(clearButton)
     end
