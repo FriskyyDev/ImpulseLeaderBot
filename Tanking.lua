@@ -110,6 +110,10 @@ function Tanking:SendTankAssignments()
     SendChatMessage("-------------------------------------", channel)
 end
 
+function Tanking:Test()
+    Tanking.TestMode = not Tanking.TestMode
+end
+
 function Tanking:GetTanksInRaid()
     local tanks = {}
     for i = 1, MAX_RAID_MEMBERS do
@@ -117,6 +121,9 @@ function Tanking:GetTanksInRaid()
         if role == "MAINTANK" and (class == "Warrior" or class == "Paladin" or class == "Druid") then
             table.insert(tanks, name)
         end
+    end
+    if Tanking.TestMode == true then
+        tanks = {"Teqno", "Swoleble", "Hourglass", "Mcbear", "Rubenonrye"}
     end
     return tanks
 end
