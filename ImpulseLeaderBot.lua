@@ -84,21 +84,17 @@ function ImpulseLeaderBot:ReadAllData()
 end
 
 function ImpulseLeaderBot:SelectGroup(container)
-    if selectedTabGroup == "tab1" then
-        ns.Tanking:Initialize(container)
-        ns.Tanking:LoadData(ns.AssignmentsData.Tanking)
-    elseif selectedTabGroup == "tab2" then
-        ns.Warlock:Initialize(container)
-        ns.Warlock:LoadData(ns.AssignmentsData.Warlock)
-    elseif selectedTabGroup == "tab3" then
-        ns.Crowd:Initialize(container)
-        ns.Crowd:LoadData(ns.AssignmentsData.Crowd)
-    elseif selectedTabGroup == "tab4" then
-        ns.Healing:Initialize(container)
-        ns.Healing:LoadData(ns.AssignmentsData.Healing)
-    elseif selectedTabGroup == "tab5" then
-        ns.Hunter:Initialize(container)
-        ns.Hunter:LoadData(ns.AssignmentsData.Hunter)
+    local moduleMap = {
+        tab1 = ns.Tanking,
+        tab2 = ns.Warlock,
+        tab3 = ns.Crowd,
+        tab4 = ns.Healing,
+        tab5 = ns.Hunter
+    }
+    local selectedModule = moduleMap[selectedTabGroup]
+    if selectedModule then
+        selectedModule:Initialize(container)
+        selectedModule:LoadData(ns.AssignmentsData[selectedTabGroup])
     end
 end
 

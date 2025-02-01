@@ -125,6 +125,14 @@ function Tanking:GetTanksInRaid()
     if Tanking.TestMode == true then
         tanks = {"Teqno", "Swoleble", "Hourglass", "Mcbear", "Rubenonrye"}
     end
+
+    -- Clear assignments for tanks not in the list
+    for tank in pairs(assignmentsTank) do
+        if not tContains(tanks, tank) then
+            assignmentsTank[tank] = nil
+        end
+    end
+
     return tanks
 end
 
@@ -182,11 +190,10 @@ function Tanking:UpdateButtonStates()
 end
 
 function Tanking:LoadData(data)
-    -- Process and load the assignment data
-    for key, value in pairs(data) do
-        -- Assume data is a table with key-value pairs representing assignments
-        -- Implement the logic to load the data into the module
-        assignmentsTank[key] = value
+    if data then
+        for key, value in pairs(data) do
+            assignmentsTank[key] = value
+        end
     end
     -- Update the UI to reflect the loaded data
     for _, checkBox in ipairs(checkBoxes) do

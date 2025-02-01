@@ -8,33 +8,36 @@ local checkBoxes = {}
 
 function Crowd:Initialize(container)
     local crowd = Crowd:GetCCInRaid()
-    
+    self:CreateScrollFrame(container, crowd, "crowd")
+end
+
+function Crowd:CreateScrollFrame(container, users, userType)
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
     
-    for _, crowd in ipairs(crowd) do
-        local crowdGroup = AceGUI:Create("InlineGroup")
-        crowdGroup:SetTitle(crowd)
-        crowdGroup:SetFullWidth(true)
-        scrollFrame:AddChild(crowdGroup)
+    for _, user in ipairs(users) do
+        local userGroup = AceGUI:Create("InlineGroup")
+        userGroup:SetTitle(user)
+        userGroup:SetFullWidth(true)
+        scrollFrame:AddChild(userGroup)
         
         local checkBoxGroup = AceGUI:Create("SimpleGroup")
         checkBoxGroup:SetLayout("Flow")
         checkBoxGroup:SetFullWidth(true)
-        crowdGroup:AddChild(checkBoxGroup)
+        userGroup:AddChild(checkBoxGroup)
         
         for _, icon in ipairs(ns.TargetIcons) do
             local checkBox = AceGUI:Create("CheckBox")
             checkBox:SetLabel(icon.texture)
-            checkBox:SetWidth(50) -- Set a fixed width for each checkbox
+            checkBox:SetWidth(50)
             checkBox:SetCallback("OnValueChanged", function(widget, event, value)
-                Crowd:UpdateCrowdAssignment(crowd, icon.label, value)
+                Crowd:UpdateAssignment(user, icon.label, value)
                 Crowd:UpdateButtonStates()
             end)
-            checkBox:SetUserData("crowd", crowd)
+            checkBox:SetUserData(userType, user)
             checkBox:SetUserData("icon", icon.label)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
@@ -44,7 +47,7 @@ function Crowd:Initialize(container)
         clearButton:SetText("Clear Assignments")
         clearButton:SetWidth(200)
         clearButton:SetCallback("OnClick", function()
-            Crowd:ClearCrowdAssignments(crowd)
+            Crowd:ClearAssignments(user)
         end)
         checkBoxGroup:AddChild(clearButton)
     end
@@ -58,7 +61,7 @@ function Crowd:Initialize(container)
     sendButton:SetText("Send Assignments")
     sendButton:SetWidth(200)
     sendButton:SetCallback("OnClick", function()
-        Crowd:SendCrowdAssignments()
+        Crowd:SendAssignments()
     end)
     buttonGroup:AddChild(sendButton)
 
@@ -66,7 +69,7 @@ function Crowd:Initialize(container)
     clearButton:SetText("Clear All Assignments")
     clearButton:SetWidth(200)
     clearButton:SetCallback("OnClick", function()
-        Crowd:ClearAllCrowdAssignments()
+        Crowd:ClearAllAssignments()
     end)
     buttonGroup:AddChild(clearButton)
 
@@ -92,7 +95,7 @@ function Crowd:GetChatChannels()
     return channels
 end
 
-function Crowd:SendCrowdAssignments()
+function Crowd:SendAssignments()
     local channel = Crowd.selectedChannel or "RAID"
     SendChatMessage("------ Crowd Assignments -------", channel)
     for crowd, assignments in pairs(assignmentsCrowd) do
@@ -120,14 +123,14 @@ function Crowd:GetCCInRaid()
     return crowds
 end
 
-function Crowd:UpdateCrowdAssignment(crowd, icon, value)
+function Crowd:UpdateAssignment(crowd, icon, value)
     if not assignmentsCrowd[crowd] then
         assignmentsCrowd[crowd] = {}
     end
     assignmentsCrowd[crowd][icon] = value
 end
 
-function Crowd:ClearCrowdAssignments(crowd)
+function Crowd:ClearAssignments(crowd)
     for i, assignments in pairs(assignmentsCrowd) do
         if i == crowd then
             for icon, _ in pairs(assignments) do
@@ -145,7 +148,7 @@ function Crowd:ClearCrowdAssignments(crowd)
     Crowd:UpdateButtonStates()
 end
 
-function Crowd:ClearAllCrowdAssignments()
+function Crowd:ClearAllAssignments()
     for crowd, assignments in pairs(assignmentsCrowd) do
         for icon, _ in pairs(assignments) do
             assignments[icon] = false
