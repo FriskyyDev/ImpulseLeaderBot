@@ -8,33 +8,36 @@ local checkBoxes = {}
 
 function Warlock:Initialize(container)
     local warlocks = Warlock:GetWarlocksInRaid()
-    
+    self:CreateScrollFrame(container, warlocks, "warlock")
+end
+
+function Warlock:CreateScrollFrame(container, users, userType)
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
     
-    for _, warlock in ipairs(warlocks) do
-        local warlockGroup = AceGUI:Create("InlineGroup")
-        warlockGroup:SetTitle(warlock)
-        warlockGroup:SetFullWidth(true)
-        scrollFrame:AddChild(warlockGroup)
+    for _, user in ipairs(users) do
+        local userGroup = AceGUI:Create("InlineGroup")
+        userGroup:SetTitle(user)
+        userGroup:SetFullWidth(true)
+        scrollFrame:AddChild(userGroup)
         
         local checkBoxGroup = AceGUI:Create("SimpleGroup")
         checkBoxGroup:SetLayout("Flow")
         checkBoxGroup:SetFullWidth(true)
-        warlockGroup:AddChild(checkBoxGroup)
+        userGroup:AddChild(checkBoxGroup)
         
         for _, icon in ipairs(ns.TargetIcons) do
             local checkBox = AceGUI:Create("CheckBox")
             checkBox:SetLabel(icon.texture)
-            checkBox:SetWidth(50) -- Set a fixed width for each checkbox
+            checkBox:SetWidth(50)
             checkBox:SetCallback("OnValueChanged", function(widget, event, value)
-                Warlock:UpdateWarlockAssignment(warlock, icon.label, value)
+                Warlock:UpdateAssignment(user, icon.label, value)
                 Warlock:UpdateButtonStates()
             end)
-            checkBox:SetUserData("warlock", warlock)
+            checkBox:SetUserData(userType, user)
             checkBox:SetUserData("icon", icon.label)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
@@ -44,7 +47,7 @@ function Warlock:Initialize(container)
         clearButton:SetText("Clear Assignments")
         clearButton:SetWidth(200)
         clearButton:SetCallback("OnClick", function()
-            Warlock:ClearWarlockAssignments(warlock)
+            Warlock:ClearAssignments(user)
         end)
         checkBoxGroup:AddChild(clearButton)
     end
@@ -58,7 +61,7 @@ function Warlock:Initialize(container)
     sendButton:SetText("Send Assignments")
     sendButton:SetWidth(200)
     sendButton:SetCallback("OnClick", function()
-        Warlock:SendWarlockAssignments()
+        Warlock:SendAssignments()
     end)
     buttonGroup:AddChild(sendButton)
 
@@ -66,7 +69,7 @@ function Warlock:Initialize(container)
     clearButton:SetText("Clear All Assignments")
     clearButton:SetWidth(200)
     clearButton:SetCallback("OnClick", function()
-        Warlock:ClearAllWarlockAssignments()
+        Warlock:ClearAllAssignments()
     end)
     buttonGroup:AddChild(clearButton)
 
@@ -92,7 +95,7 @@ function Warlock:GetChatChannels()
     return channels
 end
 
-function Warlock:SendWarlockAssignments()
+function Warlock:SendAssignments()
     local channel = Warlock.selectedChannel or "RAID"
     SendChatMessage("------ Warlock Assignments -------", channel)
     for warlock, assignments in pairs(assignmentsWarlock) do
@@ -120,14 +123,14 @@ function Warlock:GetWarlocksInRaid()
     return warlocks
 end
 
-function Warlock:UpdateWarlockAssignment(warlock, icon, value)
+function Warlock:UpdateAssignment(warlock, icon, value)
     if not assignmentsWarlock[warlock] then
         assignmentsWarlock[warlock] = {}
     end
     assignmentsWarlock[warlock][icon] = value
 end
 
-function Warlock:ClearWarlockAssignments(warlock)
+function Warlock:ClearAssignments(warlock)
     for i, assignments in pairs(assignmentsWarlock) do
         if i == warlock then
             for icon, _ in pairs(assignments) do
@@ -145,7 +148,7 @@ function Warlock:ClearWarlockAssignments(warlock)
     Warlock:UpdateButtonStates()
 end
 
-function Warlock:ClearAllWarlockAssignments()
+function Warlock:ClearAllAssignments()
     for warlock, assignments in pairs(assignmentsWarlock) do
         for icon, _ in pairs(assignments) do
             assignments[icon] = false

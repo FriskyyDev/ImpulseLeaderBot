@@ -9,34 +9,37 @@ local checkBoxes = {}
 function Healing:Initialize(container)
     local healers = Healing:GetHealersInRaid()
     local tanks = ns.Tanking:GetTanksInRaid()
-    
+    self:CreateScrollFrame(container, healers, tanks, "healer", "tank")
+end
+
+function Healing:CreateScrollFrame(container, users, targets, userType, targetType)
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     scrollFrame:SetFullWidth(true)
     scrollFrame:SetFullHeight(true)
     container:AddChild(scrollFrame)
     
-    for _, healer in ipairs(healers) do
-        local healerGroup = AceGUI:Create("InlineGroup")
-        healerGroup:SetTitle(healer)
-        healerGroup:SetFullWidth(true)
-        scrollFrame:AddChild(healerGroup)
+    for _, user in ipairs(users) do
+        local userGroup = AceGUI:Create("InlineGroup")
+        userGroup:SetTitle(user)
+        userGroup:SetFullWidth(true)
+        scrollFrame:AddChild(userGroup)
         
         local checkBoxGroup = AceGUI:Create("SimpleGroup")
         checkBoxGroup:SetLayout("Flow")
         checkBoxGroup:SetFullWidth(true)
-        healerGroup:AddChild(checkBoxGroup)
+        userGroup:AddChild(checkBoxGroup)
         
-        for _, tank in ipairs(tanks) do
+        for _, target in ipairs(targets) do
             local checkBox = AceGUI:Create("CheckBox")
-            checkBox:SetLabel(tank)
+            checkBox:SetLabel(target)
             checkBox:SetWidth(150)
             checkBox:SetCallback("OnValueChanged", function(widget, event, value)
-                Healing:UpdateHealerAssignment(healer, tank, value)
+                Healing:UpdateAssignment(user, target, value)
                 Healing:UpdateButtonStates()
             end)
-            checkBox:SetUserData("healer", healer)
-            checkBox:SetUserData("tank", tank)
+            checkBox:SetUserData(userType, user)
+            checkBox:SetUserData(targetType, target)
             checkBoxGroup:AddChild(checkBox)
             table.insert(checkBoxes, checkBox)
         end
@@ -45,7 +48,7 @@ function Healing:Initialize(container)
         clearButton:SetText("Clear Assignments")
         clearButton:SetWidth(200)
         clearButton:SetCallback("OnClick", function()
-            Healing:ClearHealerAssignments(healer)
+            Healing:ClearAssignments(user)
         end)
         checkBoxGroup:AddChild(clearButton)
     end
@@ -59,7 +62,7 @@ function Healing:Initialize(container)
     sendButton:SetText("Send Assignments")
     sendButton:SetWidth(200)
     sendButton:SetCallback("OnClick", function()
-        Healing:SendHealerAssignments()
+        Healing:SendAssignments()
     end)
     buttonGroup:AddChild(sendButton)
 
@@ -67,7 +70,7 @@ function Healing:Initialize(container)
     clearButton:SetText("Clear All Assignments")
     clearButton:SetWidth(200)
     clearButton:SetCallback("OnClick", function()
-        Healing:ClearAllHealerAssignments()
+        Healing:ClearAllAssignments()
     end)
     buttonGroup:AddChild(clearButton)
 
@@ -93,18 +96,18 @@ function Healing:GetChatChannels()
     return channels
 end
 
-function Healing:SendHealerAssignments()
+function Healing:SendAssignments()
     local channel = Healing.selectedChannel or "RAID"
     SendChatMessage("------ Healer Assignments -------", channel)
-    for healer, assignments in pairs(assignmentsHealing) do
-        local assignedTanks = {}
-        for tank, assigned in pairs(assignments) do
+    for user, assignments in pairs(assignmentsHealing) do
+        local assignedTargets = {}
+        for target, assigned in pairs(assignments) do
             if assigned then
-                table.insert(assignedTanks, tank)
+                table.insert(assignedTargets, target)
             end
         end
-        if #assignedTanks > 0 then
-            SendChatMessage(healer .. ": " .. table.concat(assignedTanks, ", "), channel)
+        if #assignedTargets > 0 then
+            SendChatMessage(user .. ": " .. table.concat(assignedTargets, ", "), channel)
         end
     end
     SendChatMessage("-------------------------------------", channel)
@@ -121,35 +124,35 @@ function Healing:GetHealersInRaid()
     return healers
 end
 
-function Healing:UpdateHealerAssignment(healer, tank, value)
-    if not assignmentsHealing[healer] then
-        assignmentsHealing[healer] = {}
+function Healing:UpdateAssignment(user, target, value)
+    if not assignmentsHealing[user] then
+        assignmentsHealing[user] = {}
     end
-    assignmentsHealing[healer][tank] = value
+    assignmentsHealing[user][target] = value
 end
 
-function Healing:ClearHealerAssignments(healer)
+function Healing:ClearAssignments(user)
     for i, assignments in pairs(assignmentsHealing) do
-        if i == healer then
-            for tank, _ in pairs(assignments) do
-                assignments[tank] = false
+        if i == user then
+            for target, _ in pairs(assignments) do
+                assignments[target] = false
             end
         end
     end
     -- Update the UI to reflect the cleared assignments
     for _, checkBox in ipairs(checkBoxes) do
-        local healer, tank = checkBox:GetUserData("healer"), checkBox:GetUserData("tank")
-        if healer == i then
+        local user, target = checkBox:GetUserData("healer"), checkBox:GetUserData("tank")
+        if user == i then
             checkBox:SetValue(false)
         end
     end
     Healing:UpdateButtonStates()
 end
 
-function Healing:ClearAllHealerAssignments()
-    for healer, assignments in pairs(assignmentsHealing) do
-        for tank, _ in pairs(assignments) do
-            assignments[tank] = false
+function Healing:ClearAllAssignments()
+    for user, assignments in pairs(assignmentsHealing) do
+        for target, _ in pairs(assignments) do
+            assignments[target] = false
         end
     end
     -- Update the UI to reflect the cleared assignments
@@ -181,9 +184,9 @@ function Healing:LoadData(data)
         end
     end
     for _, checkBox in ipairs(checkBoxes) do
-        local healer, tank = checkBox:GetUserData("healer"), checkBox:GetUserData("tank")
-        if assignmentsHealing[healer] and assignmentsHealing[healer][tank] then
-            checkBox:SetValue(assignmentsHealing[healer][tank])
+        local user, target = checkBox:GetUserData("healer"), checkBox:GetUserData("tank")
+        if assignmentsHealing[user] and assignmentsHealing[user][target] then
+            checkBox:SetValue(assignmentsHealing[user][target])
         else
             checkBox:SetValue(false)
         end
