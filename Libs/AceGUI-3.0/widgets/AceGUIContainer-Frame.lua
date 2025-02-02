@@ -1,7 +1,7 @@
 --[[-----------------------------------------------------------------------------
 Frame Container
 -------------------------------------------------------------------------------]]
-local Type, Version = "Frame", 30
+local Type, Version = "Frame", 32
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -155,6 +155,15 @@ local methods = {
 		else
 			frame:SetPoint("CENTER")
 		end
+	end,
+
+	["RemoveCloseButton"] = function(self)
+		self.closebutton:Hide()
+	end,
+
+	["RemoveStatusBar"] = function(self)
+		self.statusbg:Hide()
+		self.statustext:Hide()
 	end
 }
 
@@ -305,6 +314,8 @@ local function Constructor()
 		sizer_e     = sizer_e,
 		content     = content,
 		frame       = frame,
+		closebutton = closebutton,
+		statusbg    = statusbg,
 		type        = Type
 	}
 	for method, func in pairs(methods) do
