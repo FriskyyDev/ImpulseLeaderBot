@@ -35,7 +35,7 @@ function Crowd:SelectTreeItem(widget, group)
     if group == "assignments" then
         self:CreateScrollFrame(widget)
     end
-    -- Add more tree item handling here if needed
+    self:LoadData(assignmentsCrowd)
 end
 
 function Crowd:CreateScrollFrame(container)
@@ -72,8 +72,8 @@ function Crowd:CreateScrollFrame(container)
         end
 
         local clearButton = AceGUI:Create("Button")
-        clearButton:SetText("Clear Assignments")
-        clearButton:SetWidth(200)
+        clearButton:SetText("Clear")
+        clearButton:SetWidth(90)
         clearButton:SetCallback("OnClick", function()
             Crowd:ClearAssignments(user)
         end)
@@ -85,6 +85,14 @@ function Crowd:CreateScrollFrame(container)
     buttonGroup:SetFullWidth(true)
     scrollFrame:AddChild(buttonGroup)
 
+    local channelDropdown = AceGUI:Create("Dropdown")
+    channelDropdown:SetList(Crowd:GetChatChannels())
+    channelDropdown:SetWidth(200)
+    channelDropdown:SetCallback("OnValueChanged", function(widget, event, value)
+        Crowd.selectedChannel = value
+    end)
+    buttonGroup:AddChild(channelDropdown)
+
     local sendButton = AceGUI:Create("Button")
     sendButton:SetText("Send Assignments")
     sendButton:SetWidth(200)
@@ -94,20 +102,12 @@ function Crowd:CreateScrollFrame(container)
     buttonGroup:AddChild(sendButton)
 
     local clearButton = AceGUI:Create("Button")
-    clearButton:SetText("Clear All Assignments")
+    clearButton:SetText("Clear All")
     clearButton:SetWidth(200)
     clearButton:SetCallback("OnClick", function()
         Crowd:ClearAllAssignments()
     end)
     buttonGroup:AddChild(clearButton)
-
-    local channelDropdown = AceGUI:Create("Dropdown")
-    channelDropdown:SetList(Crowd:GetChatChannels())
-    channelDropdown:SetWidth(200)
-    channelDropdown:SetCallback("OnValueChanged", function(widget, event, value)
-        Crowd.selectedChannel = value
-    end)
-    buttonGroup:AddChild(channelDropdown)
 
     Crowd.sendButton = sendButton
     Crowd.clearButton = clearButton

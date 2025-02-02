@@ -35,7 +35,7 @@ function Healing:SelectTreeItem(widget, group)
     if group == "assignments" then
         self:CreateScrollFrame(widget)
     end
-    -- Add more tree item handling here if needed
+    self:LoadData(assignmentsHealing)
 end
 
 function Healing:CreateScrollFrame(container)
@@ -73,8 +73,8 @@ function Healing:CreateScrollFrame(container)
         end
 
         local clearButton = AceGUI:Create("Button")
-        clearButton:SetText("Clear Assignments")
-        clearButton:SetWidth(200)
+        clearButton:SetText("Clear")
+        clearButton:SetWidth(90)
         clearButton:SetCallback("OnClick", function()
             Healing:ClearAssignments(healer)
         end)
@@ -86,6 +86,14 @@ function Healing:CreateScrollFrame(container)
     buttonGroup:SetFullWidth(true)
     scrollFrame:AddChild(buttonGroup)
 
+    local channelDropdown = AceGUI:Create("Dropdown")
+    channelDropdown:SetList(Healing:GetChatChannels())
+    channelDropdown:SetWidth(200)
+    channelDropdown:SetCallback("OnValueChanged", function(widget, event, value)
+        Healing.selectedChannel = value
+    end)
+    buttonGroup:AddChild(channelDropdown)
+
     local sendButton = AceGUI:Create("Button")
     sendButton:SetText("Send Assignments")
     sendButton:SetWidth(200)
@@ -95,20 +103,12 @@ function Healing:CreateScrollFrame(container)
     buttonGroup:AddChild(sendButton)
 
     local clearButton = AceGUI:Create("Button")
-    clearButton:SetText("Clear All Assignments")
+    clearButton:SetText("Clear All")
     clearButton:SetWidth(200)
     clearButton:SetCallback("OnClick", function()
         Healing:ClearAllAssignments()
     end)
     buttonGroup:AddChild(clearButton)
-
-    local channelDropdown = AceGUI:Create("Dropdown")
-    channelDropdown:SetList(Healing:GetChatChannels())
-    channelDropdown:SetWidth(200)
-    channelDropdown:SetCallback("OnValueChanged", function(widget, event, value)
-        Healing.selectedChannel = value
-    end)
-    buttonGroup:AddChild(channelDropdown)
 
     Healing.sendButton = sendButton
     Healing.clearButton = clearButton

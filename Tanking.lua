@@ -35,7 +35,7 @@ function Tanking:SelectTreeItem(widget, group)
     if group == "assignments" then
         self:CreateScrollFrame(widget)
     end
-    -- Add more tree item handling here if needed
+    self:LoadData(assignmentsTank)
 end
 
 function Tanking:CreateScrollFrame(container)
@@ -72,8 +72,8 @@ function Tanking:CreateScrollFrame(container)
         end
 
         local clearButton = AceGUI:Create("Button")
-        clearButton:SetText("Clear Assignments")
-        clearButton:SetWidth(200)
+        clearButton:SetText("Clear")
+        clearButton:SetWidth(90)
         clearButton:SetCallback("OnClick", function()
             Tanking:ClearTankAssignments(tank)
         end)
@@ -85,6 +85,14 @@ function Tanking:CreateScrollFrame(container)
     buttonGroup:SetFullWidth(true)
     scrollFrame:AddChild(buttonGroup)
 
+    local channelDropdown = AceGUI:Create("Dropdown")
+    channelDropdown:SetList(Tanking:GetChatChannels())
+    channelDropdown:SetWidth(200)
+    channelDropdown:SetCallback("OnValueChanged", function(widget, event, value)
+        Tanking.selectedChannel = value
+    end)
+    buttonGroup:AddChild(channelDropdown)
+
     local sendButton = AceGUI:Create("Button")
     sendButton:SetText("Send Assignments")
     sendButton:SetWidth(200)
@@ -94,20 +102,12 @@ function Tanking:CreateScrollFrame(container)
     buttonGroup:AddChild(sendButton)
 
     local clearButton = AceGUI:Create("Button")
-    clearButton:SetText("Clear All Assignments")
+    clearButton:SetText("Clear All")
     clearButton:SetWidth(200)
     clearButton:SetCallback("OnClick", function()
         Tanking:ClearAllTankAssignments()
     end)
     buttonGroup:AddChild(clearButton)
-
-    local channelDropdown = AceGUI:Create("Dropdown")
-    channelDropdown:SetList(Tanking:GetChatChannels())
-    channelDropdown:SetWidth(200)
-    channelDropdown:SetCallback("OnValueChanged", function(widget, event, value)
-        Tanking.selectedChannel = value
-    end)
-    buttonGroup:AddChild(channelDropdown)
 
     Tanking.sendButton = sendButton
     Tanking.clearButton = clearButton
