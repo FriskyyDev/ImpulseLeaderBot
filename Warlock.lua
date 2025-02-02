@@ -38,14 +38,14 @@ end
 function Warlock:SelectTreeItem(widget, group)
     widget:ReleaseChildren()
     if group == "banish" then
-        self:CreateScrollFrame(widget)
+        self:CreateBanishFrame(widget)
     elseif group == "soulstones" then
         self:CreateSoulstoneFrame(widget)
     end
     self:LoadData(assignmentsWarlock)
 end
 
-function Warlock:CreateScrollFrame(container)
+function Warlock:CreateBanishFrame(container)
     local warlocks = Warlock:GetWarlocksInRaid()
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
@@ -340,8 +340,6 @@ function Warlock:LoadData(data)
         local warlock = dropdown:GetUserData("warlock")
         if assignmentsWarlock.soulstones[warlock] then
             dropdown:SetValue(assignmentsWarlock.soulstones[warlock])
-        else
-            dropdown:SetValue(nil)
         end
     end
     Warlock:UpdateButtonStates()

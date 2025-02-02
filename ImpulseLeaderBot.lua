@@ -1,6 +1,7 @@
 local name, ns = ...
-local ImpulseLeaderBot = LibStub("AceAddon-3.0"):NewAddon("ImpulseLeaderBot", "AceConsole-3.0", "AceEvent-3.0")
+local ImpulseLeaderBot = LibStub("AceAddon-3.0"):NewAddon("ImpulseLeaderBot", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
+local AceDB = LibStub("AceDB-3.0")
 ns.AceGUI = AceGUI
 ns.ImpulseLeaderBot = ImpulseLeaderBot
 _G.ILB = ns -- Give DevTool access to the namespace
@@ -41,12 +42,29 @@ ns.AssignmentsData = {
 
 -- Local variables
 local selectedTabGroup = "tab1"
+local previousRoster = {}
+
+local defaults = {
+    profile = {
+        offlineNotifications = false,
+        assignments = {
+            Tanking = {},
+            Warlock = {},
+            Crowd = {},
+            Healing = {},
+            Hunter = {}
+        }
+    }
+}
 
 function ImpulseLeaderBot:OnInitialize()
+    self.db = AceDB:New("ImpulseLeaderBotDB", defaults, true)
+    ns.AssignmentsData = self.db.profile.assignments
+
     self:Print("ImpulseLeaderBot successfully loaded!")
-    -- self:CreateMainFrame()
     self:RegisterEvent("GROUP_ROSTER_UPDATE", "OnGroupRosterUpdate")
     self:RegisterEvent("ROLE_CHANGED_INFORM", "OnGroupRosterUpdate")
+    self:ScheduleRepeatingTimer("OnGroupRosterUpdate", 2)
 end
 
 function ImpulseLeaderBot:CreateMainFrame()
@@ -64,6 +82,7 @@ function ImpulseLeaderBot:CreateMainFrame()
         {text = "Crowd", value = "tab3"},
         {text = "Healers", value = "tab4"},
         {text = "Hunters", value = "tab5"},
+        {text = "Options", value = "tab6"},
     })
     tabGroup:SetCallback("OnGroupSelected", function(container, event, group)
         container:ReleaseChildren()
@@ -90,12 +109,15 @@ function ImpulseLeaderBot:SelectGroup(container)
         tab2 = ns.Warlock,
         tab3 = ns.Crowd,
         tab4 = ns.Healing,
-        tab5 = ns.Hunter
+        tab5 = ns.Hunter,
+        tab6 = ns.Options,
     }
     local selectedModule = moduleMap[selectedTabGroup]
     if selectedModule then
         selectedModule:Initialize(container)
-        selectedModule:LoadData(ns.AssignmentsData[selectedTabGroup])
+        if selectedModule.LoadData then
+            selectedModule:LoadData(ns.AssignmentsData[selectedTabGroup])
+        end
     end
 end
 
@@ -103,12 +125,87 @@ function ImpulseLeaderBot:OnGroupRosterUpdate()
     if self.mainFrame and self.mainFrame:IsShown() then
         local tabGroup = self.mainFrame.children[1]
         tabGroup:ReleaseChildren()
-        self:Print("Children released for tab group")
 
         -- Ensure data is not lost when a new raider joins the raid or a role changes
         self:ReadAllData()
         self:SelectGroup(tabGroup)
     end
+
+    -- Check for offline players
+    self:CheckForOfflinePlayers()
+end
+
+function ImpulseLeaderBot:CheckForOfflinePlayers()
+    local currentRoster = {}
+    local offlinePlayers = {}
+    for i = 1, MAX_RAID_MEMBERS do
+        local name, _, _, _, _, _, _, online = GetRaidRosterInfo(i)
+        if name then
+            currentRoster[name] = online
+        end
+    end
+
+    for name, online in pairs(previousRoster) do
+        if online and currentRoster[name] == false then
+            table.insert(offlinePlayers, name)
+        end
+    end
+
+    previousRoster = currentRoster
+
+    if #offlinePlayers > 0 and self.db.profile.offlineNotifications then
+        self:ShowOfflinePlayersPopup(offlinePlayers)
+    end
+end
+
+function ImpulseLeaderBot:ShowOfflinePlayersPopup(offlinePlayers)
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle("Offline Player(s) Detected")
+    frame:SetLayout("Flow")
+    frame:SetWidth(300)
+    frame:SetHeight(100)
+    frame:RemoveCloseButton()
+    frame:RemoveStatusBar()
+    frame:EnableResize(false)
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 300)
+
+    for _, player in ipairs(offlinePlayers) do
+        local label = AceGUI:Create("Label")
+        label:SetText(player .. " is offline")
+        label:SetFontObject(GameFontRed)
+        label:SetColor(1, 0.5, 0) -- Orange color
+        label:SetJustifyH("CENTER")
+        label:SetFullWidth(true)
+        frame:AddChild(label)
+    end
+
+    local buttonGroup = AceGUI:Create("SimpleGroup")
+    buttonGroup:SetLayout("Flow")
+    buttonGroup:SetPoint("CENTER")
+    frame:AddChild(buttonGroup)
+
+    local panicButton = AceGUI:Create("Button")
+    panicButton:SetText("Panic!")
+    panicButton:SetWidth(125)
+    panicButton:SetCallback("OnClick", function()
+        local message = "Leader Bot: " .. table.concat(offlinePlayers, ", ") .. " disconnected! WE'RE ALL GOING TO DIE!!"
+        SendChatMessage(message, "RAID_WARNING")
+    end)
+    buttonGroup:AddChild(panicButton)
+
+    local spacer = AceGUI:Create("Label")
+    spacer:SetWidth(10)
+    buttonGroup:AddChild(spacer)
+
+    local closeButton = AceGUI:Create("Button")
+    closeButton:SetText("Nobody Cares")
+    closeButton:SetWidth(125)
+    closeButton:SetCallback("OnClick", function()
+        frame:Release()
+    end)
+    buttonGroup:AddChild(closeButton)
+
+    C_Timer.After(5, function() if frame and frame:IsShown() then frame:Release() end end)
 end
 
 SLASH_ILB1 = "/implb"
@@ -127,6 +224,7 @@ SlashCmdList["ILB"] = function()
                 {text = "Crowd", value = "tab3"},
                 {text = "Healers", value = "tab4"},
                 {text = "Hunters", value = "tab5"},
+                {text = "Options", value = "tab6"},
             })
             tabGroup:SetCallback("OnGroupSelected", function(container, event, group)
                 container:ReleaseChildren()
@@ -135,6 +233,8 @@ SlashCmdList["ILB"] = function()
             end)
             tabGroup:SelectTab(selectedTabGroup)
             ImpulseLeaderBot.mainFrame:AddChild(tabGroup)
+        else
+            tabGroup:SelectTab(selectedTabGroup)
         end
     end
 end

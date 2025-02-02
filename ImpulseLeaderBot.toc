@@ -5,8 +5,7 @@
 ## Version: 1.0.0
 ## RequiredDeps:
 ## X-Curse-Project-ID: 999999
-## SavedVariables:
-## SavedVariablesPerCharacter:
+## SavedVariables: ImpulseLeaderBotDB
 ## OptionalDeps: Ace3
 ## X-Embeds: Ace3
 
@@ -18,3 +17,4 @@ Warlock.lua
 Crowd.lua
 Healing.lua
 Hunter.lua
+Options.lua
