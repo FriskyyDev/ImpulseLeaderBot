@@ -25,6 +25,20 @@ function Options:Initialize(container)
     end)
     notificationGroup:AddChild(offlineNotificationsCheckbox)
 
+    local syncGroup = AceGUI:Create("InlineGroup")
+    syncGroup:SetTitle("Synchronization Settings")
+    syncGroup:SetFullWidth(true)
+    syncGroup:SetLayout("Flow")
+    optionsFrame:AddChild(syncGroup)
+
+    local enableSyncCheckbox = AceGUI:Create("CheckBox")
+    enableSyncCheckbox:SetLabel("Enable player synchronization")
+    enableSyncCheckbox:SetValue(ImpulseLeaderBot.db.profile.enableSync)
+    enableSyncCheckbox:SetCallback("OnValueChanged", function(widget, event, value)
+        ImpulseLeaderBot.db.profile.enableSync = value
+    end)
+    syncGroup:AddChild(enableSyncCheckbox)
+
     self.optionsFrame = optionsFrame
 end
 
@@ -33,6 +47,8 @@ function Options:LoadData()
         for _, child in ipairs(self.optionsFrame.children) do
             if child.type == "CheckBox" and child:GetLabel() == "Offline notifications" then
                 child:SetValue(ImpulseLeaderBot.db.profile.offlineNotifications)
+            elseif child.type == "CheckBox" and child:GetLabel() == "Enable player synchronization" then
+                child:SetValue(ImpulseLeaderBot.db.profile.enableSync)
             end
         end
     end

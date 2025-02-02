@@ -1,7 +1,52 @@
 local name, ns = ...
-local ImpulseLeaderBot = LibStub("AceAddon-3.0"):NewAddon("ImpulseLeaderBot", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0")
+local ImpulseLeaderBot = LibStub("AceAddon-3.0"):NewAddon("ImpulseLeaderBot", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceComm-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 local AceDB = LibStub("AceDB-3.0")
+local AceComm = LibStub("AceComm-3.0")
+local AceSerializer = LibStub("AceSerializer-3.0")
+local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("ImpulseLeaderBot", {
+    type = "launcher",
+    text = "ImpulseLeaderBot",
+    icon = "Interface\\Icons\\inv_sword_130",
+    OnClick = function(_, button)
+        if button == "LeftButton" then
+            if not ImpulseLeaderBot.mainFrame then
+                ImpulseLeaderBot:CreateMainFrame()
+            elseif ImpulseLeaderBot.mainFrame:IsShown() then
+                ImpulseLeaderBot.mainFrame:Hide()
+            else
+                ImpulseLeaderBot.mainFrame:Show()
+                local tabGroup = ImpulseLeaderBot.mainFrame.children[1]
+                if not tabGroup then
+                    tabGroup = AceGUI:Create("TabGroup")
+                    tabGroup:SetLayout("Flow")
+                    tabGroup:SetTabs({
+                        {text = "Tanks", value = "tab1"},
+                        {text = "Warlock", value = "tab2"},
+                        {text = "Crowd", value = "tab3"},
+                        {text = "Healers", value = "tab4"},
+                        {text = "Hunters", value = "tab5"},
+                        {text = "Options", value = "tab6"},
+                    })
+                    tabGroup:SetCallback("OnGroupSelected", function(container, event, group)
+                        container:ReleaseChildren()
+                        selectedTabGroup = group
+                        ImpulseLeaderBot:SelectGroup(container)
+                    end)
+                    tabGroup:SelectTab(selectedTabGroup)
+                    ImpulseLeaderBot.mainFrame:AddChild(tabGroup)
+                else
+                    tabGroup:SelectTab(selectedTabGroup)
+                end
+            end
+        end
+    end,
+    OnTooltipShow = function(tooltip)
+        tooltip:AddLine("ImpulseLeaderBot")
+        tooltip:AddLine("A tool for managing raid assignments and synchronizing data.")
+    end,
+})
+local icon = LibStub("LibDBIcon-1.0")
 ns.AceGUI = AceGUI
 ns.ImpulseLeaderBot = ImpulseLeaderBot
 _G.ILB = ns -- Give DevTool access to the namespace
@@ -47,6 +92,7 @@ local previousRoster = {}
 local defaults = {
     profile = {
         offlineNotifications = false,
+        enableSync = true,
         assignments = {
             Tanking = {},
             Warlock = {},
@@ -60,11 +106,14 @@ local defaults = {
 function ImpulseLeaderBot:OnInitialize()
     self.db = AceDB:New("ImpulseLeaderBotDB", defaults, true)
     ns.AssignmentsData = self.db.profile.assignments
+    self.db.profile.minimap = self.db.profile.minimap or {}
+    icon:Register("ImpulseLeaderBot", LDB, self.db.profile.minimap)
 
     self:Print("ImpulseLeaderBot successfully loaded!")
     self:RegisterEvent("GROUP_ROSTER_UPDATE", "OnGroupRosterUpdate")
     self:RegisterEvent("ROLE_CHANGED_INFORM", "OnGroupRosterUpdate")
     self:ScheduleRepeatingTimer("OnGroupRosterUpdate", 2)
+    self:RegisterComm("ImpLBSync", "OnCommReceived")
 end
 
 function ImpulseLeaderBot:CreateMainFrame()
@@ -206,6 +255,31 @@ function ImpulseLeaderBot:ShowOfflinePlayersPopup(offlinePlayers)
     buttonGroup:AddChild(closeButton)
 
     C_Timer.After(5, function() if frame and frame:IsShown() then frame:Release() end end)
+end
+
+function ImpulseLeaderBot:SyncAssignments()
+    if self.db.profile.enableSync then
+        local data = AceSerializer:Serialize(ns.AssignmentsData)
+        AceComm:SendCommMessage("ImpLBSync", data, "RAID")
+    end
+end
+
+function ImpulseLeaderBot:OnCommReceived(prefix, message, distribution, sender)
+    if prefix == "ImpLBSync" and self.db.profile.enableSync then
+        local isLeaderOrAssist = UnitIsGroupLeader(sender) or UnitIsGroupAssistant(sender)
+        if isLeaderOrAssist then
+            local success, data = AceSerializer:Deserialize(message)
+            if success and data then
+                ns.AssignmentsData = data
+                self:ReadAllData()
+                if self.mainFrame and self.mainFrame:IsShown() then
+                    local tabGroup = self.mainFrame.children[1]
+                    tabGroup:ReleaseChildren()
+                    self:SelectGroup(tabGroup)
+                end
+            end
+        end
+    end
 end
 
 SLASH_ILB1 = "/implb"
